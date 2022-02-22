@@ -1,0 +1,141 @@
+/* SECTION 1: user code */
+package Back;
+
+import java_cup.runtime.*;
+
+parser code {:
+        public SintacticParser(AnalizerPractice lexer){
+                super(lexer);
+        }
+
+        public void viewToken(Symbol cur_token){
+                System.out.println("Simbolo detectado " + sym.terminalNames[cur_token.sym]);
+                System.out.println(String.format("En la posicion: %d, %d", cur_token.left, cur_token.right));
+        }
+
+        public void syntax_error(Symbol cur_token) {
+                System.out.println("El error es el simbolo: " + sym.terminalNames[cur_token.sym]);
+                System.out.println(String.format("En la posicion: %d, %d", cur_token.left, cur_token.right));
+        }
+
+        public void unrecovered_syntax_error(Symbol cur_token) {
+                if (cur_token.sym == sym.EOF) {
+                  System.out.println("public void unrecoveredsyntax_error");
+                }
+        }
+:};
+
+
+/* Terminals (tokens returned by the scanner). */
+terminal Integer INTEGER;
+terminal Double DECIMAL;
+terminal START_GRAPHIC, TYPE_BARS, TYPE_PIE, ID_GRAPHIC, AXIS_X, AXIS_Y,
+         TAGS, VALUES, JOIN, TYPE, TYPE_ATTRIBUTE, TOTAL, EXTRA,
+         RUN, SUMA, RESTA, MULTIPLY, DIVIDE, O_BRACE, 
+         C_BRACE, O_SBRACKET, C_SBRACKET, O_PARENT, C_PARENT,
+         SEMICOLON, COLONS, STRING, COMMA;
+
+/* Non terminals */
+non terminal initial, bar_estructure, bar_attributes, pie_estructure, 
+             title_estructure, axisx_estructure, axisy_estructure,
+             join_estructure, input_integers, aritmethic_estructure,
+             type_estructure, tags_estructure, values_estructure,
+             total_estructure, extra_estructure, pie_attributes,
+             input_operations, numbers_type;
+
+
+/* The Precedence rules*/
+precedence left SUMA, RESTA;
+precedence left MULTIPLY, DIVIDE;
+
+start with initial;
+
+/* The grammar rules */
+initial ::= START_GRAPHIC bar_estructure        
+        | START_GRAPHIC pie_estructure
+        | START_GRAPHIC bar_estructure initial
+        | START_GRAPHIC pie_estructure initial
+        ;
+
+bar_estructure ::= TYPE_BARS O_BRACE bar_attributes C_BRACE;
+
+bar_attributes ::= title_estructure bar_attributes
+                 | axisx_estructure bar_attributes
+                 | axisy_estructure bar_attributes
+                 | join_estructure
+                 ;
+
+pie_estructure::= TYPE_PIE O_BRACE pie_attributes C_BRACE;
+
+pie_attributes::= title_estructure pie_attributes
+                | type_estructure pie_attributes
+                | tags_estructure pie_attributes
+                | values_estructure pie_attributes
+                | total_estructure pie_attributes
+                | join_estructure pie_attributes
+                | extra_estructure
+                ;
+
+title_estructure::= ID_GRAPHIC COLONS STRING SEMICOLON;
+
+axisx_estructure::= AXIS_X COLONS O_SBRACKET STRING COMMA STRING C_SBRACKET SEMICOLON;
+
+axisy_estructure::= AXIS_Y COLONS O_SBRACKET input_operations COMMA input_operations C_SBRACKET SEMICOLON;
+
+join_estructure::= JOIN COLONS O_SBRACKET O_BRACE INTEGER COMMA INTEGER C_BRACE COMMA O_BRACE INTEGER COMMA INTEGER C_BRACE C_SBRACKET SEMICOLON;
+
+type_estructure::= TYPE COLONS TYPE_ATTRIBUTE SEMICOLON;
+
+tags_estructure::= TAGS COLONS O_SBRACKET STRING COMMA STRING C_SBRACKET SEMICOLON;
+
+values_estructure::= VALUES COLONS O_SBRACKET INTEGER COMMA INTEGER C_SBRACKET SEMICOLON;
+
+total_estructure::= TOTAL COLONS INTEGER SEMICOLON;
+
+extra_estructure::= EXTRA COLONS STRING SEMICOLON;
+
+/*Integer input with arithmetic operation */
+input_integers::= INTEGER
+                | INTEGER aritmethic_estructure input_integers
+                | O_PARENT input_integers C_PARENT
+                ;
+
+/*Do arithmetic*/
+input_operations::= numbers_type:number                                                        {: RESULT = Double.valueOf(number.toString()); :}
+                  | O_PARENT input_operations:number C_PARENT                                         {: RESULT = Double.valueOf(number.toString()); :}
+                  | input_operations:numberL aritmethic_estructure:op input_operations:numberR            {: 
+                                                                                                  Double l = Double.valueOf(numberL.toString());
+                                                                                                  Double r = Double.valueOf(numberR.toString());
+                                                                                                  Double total = 0.0;
+                                                                                                  switch(Integer.valueOf(op.toString())){
+                                                                                                          case sym.SUMA:
+                                                                                                                total = l + r;
+                                                                                                                break;
+                                                                                                          case sym.RESTA:
+                                                                                                                total = l - r;
+                                                                                                                break;
+                                                                                                          case sym.DIVIDE:
+                                                                                                                total = l / r;
+                                                                                                                break;
+                                                                                                          case sym.MULTIPLY:
+                                                                                                                total = l * r;
+                                                                                                                break;
+                                                                                                          default:
+                                                                                                                System.out.println("Error en la operación");
+                                                                                                                break;
+                                                                                                  }
+                                                                                                  System.out.println("Resultado: "+ total);
+                                                                                                  RESULT = total;
+                                                                                               :}
+                  ;
+
+numbers_type::= INTEGER:numberInt               {: RESULT = Integer.valueOf(numberInt.toString()); :}
+              | DECIMAL:numberDo                {: RESULT = Double.valueOf(numberDo.toString()); :}
+              ;
+
+aritmethic_estructure::= SUMA                   {: RESULT = sym.SUMA; :}
+                       | RESTA                  {: RESULT = sym.RESTA; :}
+                       | MULTIPLY               {: RESULT = sym.MULTIPLY; :}
+                       | DIVIDE                 {: RESULT = sym.DIVIDE; :}
+                       ;
+
