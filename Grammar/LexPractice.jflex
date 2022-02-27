@@ -1,7 +1,8 @@
 /* SECTION 1: user code */
 package Back;
 import java_cup.runtime.Symbol;
-
+import Back.Control.ErrorDesc;
+import java.util.ArrayList;
 
 /* SECTION 2: config */
 
@@ -53,6 +54,22 @@ INTEGER = [0-9]+
 DECIMAL = \d+(\.\d+)?
 W = [\s\t\r\f\n]+
 
+%{
+    ArrayList<ErrorDesc> errors = new ArrayList<>();
+
+    public void addError(String value, int line, int column){
+        errors.add(new ErrorDesc(value, line, column,
+         "Símbolo no existe en el lenguaje", "Léxico"));
+    }
+
+    public void showErrors() {
+        for (ErrorDesc error : errors) {
+            System.out.println("Lexema:" + error.getContent() + " L:" + error.getLine()
+            + " C:" + error.getColumn() + " Tipo:" + error.getTypeError() + " " + error.getMsjInfo());
+        }
+    }
+%}
+
 %%
 
 /* SECTION 3: lexical rules */
@@ -88,4 +105,4 @@ W = [\s\t\r\f\n]+
 {DECIMAL}       {return new Symbol(sym.DECIMAL, yyline+1, yycolumn+1, new Double(yytext()));}
 {W}             {}
 {COM}           {}
-[^]     {}
+[^]             {addError(yytext(), yyline+1, yycolumn+1);}

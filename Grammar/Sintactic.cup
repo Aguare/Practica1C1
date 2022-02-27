@@ -1,9 +1,18 @@
 /* SECTION 1: user code */
 package Back;
 
+import Back.Control.ErrorDesc;
+import Back.Control.CreateGraphics;
+import Back.Control.Transition;
+import java.util.ArrayList;
 import java_cup.runtime.*;
 
 parser code {:
+
+        ArrayList<ErrorDesc> errors = new ArrayList<>();
+        Transition trans = new Transition();
+        CreateGraphics create = new CreateGraphics();
+
         public SintacticParser(AnalizerPractice lexer){
                 super(lexer);
         }
@@ -14,17 +23,36 @@ parser code {:
         }
 
         public void syntax_error(Symbol cur_token) {
-                System.out.println("El error es el simbolo: " + sym.terminalNames[cur_token.sym]);
-                System.out.println(String.format("En la posicion: %d, %d", cur_token.left, cur_token.right));
-        }
-
-        public void unrecovered_syntax_error(Symbol cur_token) {
-                if (cur_token.sym == sym.EOF) {
-                  System.out.println("public void unrecoveredsyntax_error");
+                if (cur_token.sym != sym.EOF){
+                        addError(cur_token);
+                }else{
+                        System.out.println("Fin Lectura");
+                        create.showGraphicsSaved();
                 }
         }
-:};
+    
+        public void unrecovered_syntax_error(Symbol cur_token) {
+                addError(cur_token);
+        }
+    
+        public void addError(Symbol cur_token) {
+                try {
+                        errors.add(new ErrorDesc((String) cur_token.value, cur_token.left, cur_token.right, trans.analizeError(stack), "Sintáctico"));
+                } catch (Exception e) {
+                }
+        }
+    
+        public void showErrors() {
+                for (ErrorDesc error : errors) {
+                        System.out.println("Lexema:" + error.getContent() + " L:" + error.getLine()
+                        + " C:" + error.getColumn() + " Tipo:" + error.getTypeError() + " " + error.getMsjInfo());
+                }
+        }
 
+        public void showSavedGrap(){
+            create.showGraphicsSaved();
+        }
+:};
 
 /* Terminals (tokens returned by the scanner). */
 terminal Integer INTEGER;
@@ -38,67 +66,114 @@ terminal START_GRAPHIC, TYPE_BARS, TYPE_PIE, ID_GRAPHIC, AXIS_X, AXIS_Y,
 /* Non terminals */
 non terminal initial, bar_estructure, bar_attributes, pie_estructure, 
              title_estructure, axisx_estructure, axisy_estructure,
-             join_estructure, input_integers, aritmethic_estructure,
-             type_estructure, tags_estructure, values_estructure,
-             total_estructure, extra_estructure, pie_attributes,
-             input_operations, numbers_type;
+             join_estructure, aritmethic_estructure, type_estructure, 
+             tags_estructure, values_estructure, total_estructure, 
+             extra_estructure, pie_attributes, input_operations, 
+             numbers_type, execute_graphics, init_declaration,
+             graphics_declaration;
 
 
 /* The Precedence rules*/
 precedence left SUMA, RESTA;
 precedence left MULTIPLY, DIVIDE;
 
-start with initial;
+start with init_declaration;
+
+init_declaration::= initial
+                  | execute_graphics init_declaration
+                  ;
 
 /* The grammar rules */
-initial ::= START_GRAPHIC bar_estructure        
-        | START_GRAPHIC pie_estructure
-        | START_GRAPHIC bar_estructure initial
-        | START_GRAPHIC pie_estructure initial
-        ;
+initial ::= graphics_declaration initial                
+          |                 
+          ;
 
-bar_estructure ::= TYPE_BARS O_BRACE bar_attributes C_BRACE;
+graphics_declaration::= pie_estructure
+                      | bar_estructure 
+                      ;
+
+execute_graphics::= RUN O_PARENT STRING:s1 C_PARENT SEMICOLON                   {:
+                                                                                        if (!create.saveRunGraphic(s1.toString())){
+                                                                                                errors.add(new ErrorDesc("No existe",s1left,s1right,"La gráfica no está declarada", "Semántico"));
+                                                                                        }
+                                                                                :}
+                  ;
+
+bar_estructure ::= START_GRAPHIC TYPE_BARS O_BRACE bar_attributes C_BRACE     {:create.type_graphic = 0; Object ob = create.verifyCountDeclaration(cur_token.left, cur_token.right);
+                                                                                if (ob instanceof ErrorDesc) {
+                                                                                        errors.add((ErrorDesc) ob);
+                                                                                }
+                                                                              :}
+                 ;    
 
 bar_attributes ::= title_estructure bar_attributes
                  | axisx_estructure bar_attributes
                  | axisy_estructure bar_attributes
-                 | join_estructure
+                 | join_estructure bar_attributes
+                 |
+                 | error SEMICOLON                                                       
                  ;
 
-pie_estructure::= TYPE_PIE O_BRACE pie_attributes C_BRACE;
+pie_estructure::= START_GRAPHIC TYPE_PIE O_BRACE pie_attributes C_BRACE       {:create.type_graphic = 1; Object ob = create.verifyCountDeclaration(cur_token.left, cur_token.right);
+                                                                                if (ob instanceof ErrorDesc) {
+                                                                                        errors.add((ErrorDesc) ob);
+                                                                                }                                                           
+                                                                              :}
+                ;
 
-pie_attributes::= title_estructure pie_attributes
+pie_attributes::= title_estructure pie_attributes            
                 | type_estructure pie_attributes
                 | tags_estructure pie_attributes
                 | values_estructure pie_attributes
                 | total_estructure pie_attributes
                 | join_estructure pie_attributes
-                | extra_estructure
+                | extra_estructure pie_attributes
+                |
+                | error SEMICOLON
                 ;
 
-title_estructure::= ID_GRAPHIC COLONS STRING SEMICOLON;
+title_estructure::= ID_GRAPHIC COLONS STRING:n SEMICOLON                       {:create.title_dec.add(n.toString());:}
+                  ;                                               
 
-axisx_estructure::= AXIS_X COLONS O_SBRACKET STRING COMMA STRING C_SBRACKET SEMICOLON;
+axisx_estructure::= AXIS_X COLONS O_SBRACKET STRING:s1 COMMA STRING:s2 C_SBRACKET SEMICOLON     {:
+                                                                                                        create.axisx_dec.add(s1.toString());
+                                                                                                        create.axisx_dec.add(s2.toString());
+                                                                                                :}
+                  ;   
 
-axisy_estructure::= AXIS_Y COLONS O_SBRACKET input_operations COMMA input_operations C_SBRACKET SEMICOLON;
+axisy_estructure::= AXIS_Y COLONS O_SBRACKET input_operations:op1 COMMA input_operations:op2 C_SBRACKET SEMICOLON      {:
+                                                                                                                                create.axisy_dec.add(Double.valueOf(op1.toString()));
+                                                                                                                                create.axisy_dec.add(Double.valueOf(op2.toString()));
+                                                                                                                       :}
+                  ;
 
-join_estructure::= JOIN COLONS O_SBRACKET O_BRACE INTEGER COMMA INTEGER C_BRACE COMMA O_BRACE INTEGER COMMA INTEGER C_BRACE C_SBRACKET SEMICOLON;
+join_estructure::= JOIN COLONS O_SBRACKET O_BRACE INTEGER:i1 COMMA INTEGER:i2 C_BRACE COMMA
+                   O_BRACE INTEGER:i3 COMMA INTEGER:i4 C_BRACE C_SBRACKET SEMICOLON                {:
+                                                                                                        create.join_dec.add(i1);create.join_dec.add(i2);
+                                                                                                        create.join_dec.add(i3);create.join_dec.add(i4);
+                                                                                                   :}
+                 ;
 
-type_estructure::= TYPE COLONS TYPE_ATTRIBUTE SEMICOLON;
+type_estructure::= TYPE COLONS TYPE_ATTRIBUTE:s1 SEMICOLON      {:create.type_dec.add(s1.toString());:}
+                 ;
 
-tags_estructure::= TAGS COLONS O_SBRACKET STRING COMMA STRING C_SBRACKET SEMICOLON;
+tags_estructure::= TAGS COLONS O_SBRACKET STRING:s1 COMMA STRING:s2 C_SBRACKET SEMICOLON        {:
+                                                                                                        create.tags_dec.add(s1.toString());
+                                                                                                        create.tags_dec.add(s2.toString());
+                                                                                                :}
+                 ;
 
-values_estructure::= VALUES COLONS O_SBRACKET INTEGER COMMA INTEGER C_SBRACKET SEMICOLON;
+values_estructure::= VALUES COLONS O_SBRACKET INTEGER:i1 COMMA INTEGER:i2 C_SBRACKET SEMICOLON  {:
+                                                                                                        create.value_dec.add(Double.valueOf(i1));
+                                                                                                        create.value_dec.add(Double.valueOf(i2));
+                                                                                                :}
+                   ;
 
-total_estructure::= TOTAL COLONS INTEGER SEMICOLON;
+total_estructure::= TOTAL COLONS INTEGER:i1 SEMICOLON           {:create.total_dec.add(Double.valueOf(i1));:}
+                  ;
 
-extra_estructure::= EXTRA COLONS STRING SEMICOLON;
-
-/*Integer input with arithmetic operation */
-input_integers::= INTEGER
-                | INTEGER aritmethic_estructure input_integers
-                | O_PARENT input_integers C_PARENT
-                ;
+extra_estructure::= EXTRA COLONS STRING:s1 SEMICOLON            {:create.extra_dec.add(s1.toString());:}
+                  ;
 
 /*Do arithmetic*/
 input_operations::= numbers_type:number                                                        {: RESULT = Double.valueOf(number.toString()); :}
@@ -124,7 +199,10 @@ input_operations::= numbers_type:number                                         
                                                                                                                 System.out.println("Error en la operación");
                                                                                                                 break;
                                                                                                   }
-                                                                                                  System.out.println("Resultado: "+ total);
+                                                                                                  Object o = create.recordOperation(l, r, numberLleft, numberLright, Integer.valueOf(op.toString()));
+                                                                                                  if (o != null){
+                                                                                                          errors.add((ErrorDesc) o);
+                                                                                                  }
                                                                                                   RESULT = total;
                                                                                                :}
                   ;
