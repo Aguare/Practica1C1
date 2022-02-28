@@ -1,12 +1,13 @@
 package com.aguare.appgraphic.Back.Graphics;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
  *
  * @author aguare
  */
-public class GPie extends GGeneral {
+public class GPie extends GGeneral implements Serializable {
 
     private String type;
     private ArrayList<String> tags;

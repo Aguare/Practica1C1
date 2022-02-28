@@ -27,11 +27,11 @@ import java.util.ArrayList;
 
 public class GenerateChart {
 
-    private int[] colors = new int[]{Color.CYAN, Color.RED, Color.GREEN, Color.BLUE};
+    private int[] colors = new int[]{Color.GREEN, Color.YELLOW, Color.GREEN, Color.BLUE};
 
     public BarChart createChartBar(Context context, GBars gBar) {
         BarChart barChart = new BarChart(context);
-        barChart = (BarChart) getSameChart(barChart, gBar.getTitle(), Color.RED, Color.WHITE, 3000);
+        barChart = (BarChart) getSameChart(barChart, gBar.getTitle(), 3000);
         barChart.setDrawGridBackground(true);
         barChart.setDrawBarShadow(true);
         barChart.setData(getBarData(gBar.getAxis_y()));
@@ -39,26 +39,28 @@ public class GenerateChart {
         axisX(barChart.getXAxis(), gBar.getAxis_x());
         axisLeft(barChart.getAxisLeft());
         axisRight(barChart.getAxisRight());
-        barChart.getLegend().setEnabled(false);
+        //barChart.getLegend().setEnabled(false);
+        legend(barChart, gBar.getAxis_x());
         return barChart;
     }
 
     public PieChart createChartPie(Context context, GPie gPie) {
         PieChart pieChart = new PieChart(context);
-        pieChart = (PieChart) getSameChart(pieChart, gPie.getTitle(), Color.RED, Color.WHITE, 3000);
+        pieChart = (PieChart) getSameChart(pieChart, gPie.getTitle(), 3000);
         pieChart.setHoleRadius(10);
         pieChart.setTransparentCircleRadius(12);
         pieChart.setDrawHoleEnabled(false);
-        pieChart.setData(getPieData(gPie.getValues()));
+        pieChart.setData(getPieData(gPie.getValues(), gPie));
         pieChart.invalidate();
+        legend(pieChart, gPie.getTags());
         return pieChart;
     }
 
-    private Chart getSameChart(Chart chart, String description, int textColor, int background, int animation) {
+    private Chart getSameChart(Chart chart, String description, int animation) {
         chart.getDescription().setText(description);
         chart.getDescription().setTextSize(15);
-        chart.getDescription().setTextColor(textColor);
-        chart.setBackgroundColor(background);
+        chart.getDescription().setTextColor(Color.RED);
+        chart.setBackgroundColor(Color.WHITE);
         chart.animateY(animation);
         return chart;
     }
@@ -111,8 +113,8 @@ public class GenerateChart {
 
     private DataSet getData(DataSet data) {
         data.setColors(colors);
-        data.setValueTextSize(Color.WHITE);
-        data.setValueTextSize(10);
+        data.setValueTextSize(Color.BLACK);
+        data.setValueTextSize(15);
         return data;
     }
 
@@ -124,10 +126,30 @@ public class GenerateChart {
         return barData;
     }
 
-    private PieData getPieData(ArrayList<Double> data) {
+    private PieData getPieData(ArrayList<Double> data, GPie pie) {
+        changeTypeChart(pie);
         PieDataSet pieDataSet = (PieDataSet) getData(new PieDataSet(getPieEntries(data), ""));
         pieDataSet.setSliceSpace(2);
-        pieDataSet.setValueFormatter(new PercentFormatter());
+        String type = pie.getType();
+        if (pie.getType().equals("Porcentaje")) {
+            pieDataSet.setValueFormatter(new PercentFormatter());
+        }
         return new PieData(pieDataSet);
     }
+
+    private void changeTypeChart(GPie pie) {
+        if (pie.getType().equals("Porcentaje")) {
+            ArrayList<Double> values = pie.getValues();
+            Double sum = 0.0;
+            for (Double v : values) {
+                sum += v;
+            }
+            for (int i = 0; i < values.size(); i++) {
+                Double novo = 100 * values.get(i) / sum;
+                values.set(i, novo);
+            }
+            pie.setValues(values);
+        }
+    }
+
 }

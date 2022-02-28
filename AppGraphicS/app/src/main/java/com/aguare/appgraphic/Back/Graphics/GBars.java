@@ -1,12 +1,13 @@
 package com.aguare.appgraphic.Back.Graphics;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
  *
  * @author aguare
  */
-public class GBars extends GGeneral {
+public class GBars extends GGeneral implements Serializable {
 
     private ArrayList<String> axis_x;
     private ArrayList<Double> axis_y;

@@ -2,6 +2,7 @@
 
 /* SECTION 1: user code */
 package com.aguare.appgraphic.Back;
+import com.aguare.appgraphic.Back.sym;
 import java_cup.runtime.Symbol;
 import com.aguare.appgraphic.Back.Control.ErrorDesc;
 import java.util.ArrayList;
@@ -303,6 +304,10 @@ public class AnalizerPractice implements java_cup.runtime.Scanner {
             System.out.println("Lexema:" + error.getContent() + " L:" + error.getLine()
             + " C:" + error.getColumn() + " Tipo:" + error.getTypeError() + " " + error.getMsjInfo());
         }
+    }
+
+    public ArrayList<ErrorDesc> getErrors(){
+        return errors;
     }
 
 

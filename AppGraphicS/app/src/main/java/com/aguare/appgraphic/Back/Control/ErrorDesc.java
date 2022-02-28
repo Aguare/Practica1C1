@@ -1,10 +1,12 @@
 package com.aguare.appgraphic.Back.Control;
 
+import java.io.Serializable;
+
 /**
  *
  * @author aguare
  */
-public class ErrorDesc {
+public class ErrorDesc implements Serializable {
 
     private String content;
     private int line;

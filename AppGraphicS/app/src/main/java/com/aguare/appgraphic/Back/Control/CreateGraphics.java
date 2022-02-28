@@ -8,7 +8,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
- *
  * @author aguare
  */
 public class CreateGraphics implements Serializable {
@@ -132,11 +131,11 @@ public class CreateGraphics implements Serializable {
     private Object createGBar() throws Exception {
         Object error = verifyDeclaration(title_dec.size(), "titulo", 1);
         if (error == null) {
-            error = verifyDeclaration(axisx_dec.size(), "ejex", 2);
+            error = verifyMinimum(axisx_dec.size(), "ejex", 2);
             if (error == null) {
-                error = verifyDeclaration(axisy_dec.size(), "ejey", 2);
+                error = verifyMinimum(axisy_dec.size(), "ejey", axisx_dec.size());
                 if (error == null) {
-                    if (join_dec.size() <= 4) {
+                    if (join_dec.size() <= axisx_dec.size() * 2) {
                         String t = title_dec.get(0);
                         Object x = axisx_dec.clone();
                         Object y = axisy_dec.clone();
@@ -160,18 +159,20 @@ public class CreateGraphics implements Serializable {
         if (error == null) {
             error = verifyDeclaration(type_dec.size(), "tipo", 1);
             if (error == null) {
-                error = verifyDeclaration(tags_dec.size(), "etiquetas", 2);
+                error = verifyMinimum(tags_dec.size(), "etiquetas", 2);
                 if (error == null) {
-                    error = verifyDeclaration(value_dec.size(), "valores", 2);
+                    error = verifyMinimum(value_dec.size(), "valores", tags_dec.size());
                     if (error == null) {
-                        error = verifyDeclaration(total_dec.size(), "total", 1);
-                        if (error == null) {
+                        if (total_dec.size() <= 1) {
                             if (extra_dec.size() <= 1) {
-                                if (join_dec.size() <= 4) {
+                                if (join_dec.size() <= tags_dec.size() * 2) {
                                     String t = type_dec.get(0);
                                     Object tags = tags_dec.clone();
                                     Object v = value_dec.clone();
-                                    Double to = total_dec.get(0);
+                                    Double to = 360.0;
+                                    if (total_dec.size() == 1) {
+                                        to = total_dec.get(0);
+                                    }
                                     String ex = extra_dec.get(0);
                                     String ti = title_dec.get(0);
                                     Object j = join_dec.clone();
@@ -195,6 +196,14 @@ public class CreateGraphics implements Serializable {
         return error;
     }
 
+    private Object verifyMinimum(int size, String name, int minimum) {
+        if (size >= minimum) {
+            return null;
+        } else {
+            return new ErrorDesc("Falta o no hay Declaración de " + name, 0, 0, "El atributo es obligatorio", "Sintáctico");
+        }
+    }
+
     private Object verifyDeclaration(int size, String name, int required) {
         if (size == required) {
             return null;
@@ -211,12 +220,20 @@ public class CreateGraphics implements Serializable {
         return allGBar;
     }
 
+    public ArrayList<String> getRunGraphics() {
+        return runGraphics;
+    }
+
     public void setAllGBar(ArrayList<GBars> allGBar) {
         this.allGBar = allGBar;
     }
 
     public ArrayList<GPie> getAllGPie() {
         return allGPie;
+    }
+
+    public ArrayList<Operation> getOperations(){
+        return operations;
     }
 
     public void setAllGPie(ArrayList<GPie> allGPie) {

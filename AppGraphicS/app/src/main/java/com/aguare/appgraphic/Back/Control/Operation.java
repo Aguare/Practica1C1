@@ -1,10 +1,12 @@
 package com.aguare.appgraphic.Back.Control;
 
+import java.io.Serializable;
+
 /**
  *
  * @author aguare
  */
-public class Operation {
+public class Operation implements Serializable {
 
     private String type_operation;
     private int line;
