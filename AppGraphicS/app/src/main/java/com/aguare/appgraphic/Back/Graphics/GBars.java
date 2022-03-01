@@ -5,6 +5,8 @@ import android.graphics.Point;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 
 /**
  * @author aguare
@@ -18,12 +20,15 @@ public class GBars extends GGeneral implements Serializable {
         super(title, join);
         this.axis_x = axis_x;
         this.axis_y = axis_y;
-        sortJoin();
+
     }
 
     public void sortJoin() {
+        Collections.reverse(axis_x);
+        Collections.reverse(axis_y);
         ArrayList<String> x = new ArrayList<>();
         ArrayList<Double> y = new ArrayList<>();
+        Collections.reverse(y);
         ArrayList<Point> points = new ArrayList<>();
         ArrayList<Integer> join = getJoin();
         if (getJoin().size() >= 2) {
@@ -47,8 +52,8 @@ public class GBars extends GGeneral implements Serializable {
                 }
                 axis_x.clear();
                 axis_y.clear();
-                axis_x = x;
-                axis_y = y;
+                this.setAxis_x(x);
+                this.setAxis_y(y);
             } catch (Exception ex) {
             }
         }

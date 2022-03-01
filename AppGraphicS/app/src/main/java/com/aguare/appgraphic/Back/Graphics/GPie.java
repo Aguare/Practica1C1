@@ -4,6 +4,7 @@ import android.graphics.Point;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 
 /**
  * @author aguare
@@ -23,10 +24,11 @@ public class GPie extends GGeneral implements Serializable {
         this.values = values;
         this.total = total;
         this.extra = extra;
-        sortJoin();
+        Collections.reverse(tags);
+        Collections.reverse(values);
     }
 
-    private void sortJoin() {
+    public void sortJoin() {
         ArrayList<String> x = new ArrayList<>();
         ArrayList<Double> y = new ArrayList<>();
         ArrayList<Point> points = new ArrayList<>();
