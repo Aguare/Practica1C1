@@ -60,6 +60,7 @@ class ShowGraphics : AppCompatActivity() {
 
     private fun createBarGraphic(gBar: GBars) {
         var context = lay.context
+        gBar.sortJoin()
         var barChart = generate.createChartBar(context, gBar)
         barChart.minimumHeight = 500
         lay.addView(barChart);
@@ -67,6 +68,7 @@ class ShowGraphics : AppCompatActivity() {
 
     private fun createPieGraphic(pie: GPie) {
         var context = lay.context
+        pie.sortJoin()
         var pieChart = generate.createChartPie(context, pie)
         pieChart.minimumHeight = 500
         lay.addView(pieChart)
