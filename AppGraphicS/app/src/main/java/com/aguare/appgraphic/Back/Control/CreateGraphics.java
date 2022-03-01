@@ -124,6 +124,7 @@ public class CreateGraphics implements Serializable {
                 }
             }
         } catch (Exception e) {
+            e.printStackTrace();
             return new ErrorDesc("Incompleto", line, column, "Falta información de las gráficas", "Sintáctico");
         }
     }
@@ -163,30 +164,20 @@ public class CreateGraphics implements Serializable {
                 if (error == null) {
                     error = verifyMinimum(value_dec.size(), "valores", tags_dec.size());
                     if (error == null) {
-                        if (total_dec.size() <= 1) {
-                            if (extra_dec.size() <= 1) {
-                                if (join_dec.size() <= tags_dec.size() * 2) {
-                                    String t = type_dec.get(0);
-                                    Object tags = tags_dec.clone();
-                                    Object v = value_dec.clone();
-                                    Double to = 360.0;
-                                    if (total_dec.size() == 1) {
-                                        to = total_dec.get(0);
-                                    }
-                                    String ex = extra_dec.get(0);
-                                    String ti = title_dec.get(0);
-                                    Object j = join_dec.clone();
-                                    allGPie.add(new GPie(t, (ArrayList<String>) tags, (ArrayList<Double>) v,
-                                            to, ex, ti, (ArrayList<Integer>) j));
-                                    emptyDeclaration();
-                                    return true;
-                                } else {
-                                    emptyDeclaration();
-                                    return new ErrorDesc("Multiple Declaración de unir", 0, 0, "Sólo puede declararse una vez el atributo", "Sintáctico");
-                                }
+                        if (type_dec.get(0).equals("Porcentaje")) {
+                            if (total_dec.size() == 0) {
+                                return attributesOptionalForPie();
+                            } else {
+                                String title = title_dec.get(0);
+                                emptyDeclaration();
+                                return new ErrorDesc("No se debe definir total en " + title, 0, 0, "Sólo se permite un total si el tipo es cantidad", "Semántico");
+                            }
+                        } else {
+                            if (total_dec.size() == 1) {
+                                return attributesOptionalForPie();
                             } else {
                                 emptyDeclaration();
-                                return new ErrorDesc("Multiple Declaración de extra", 0, 0, "Sólo puede declararse una vez el atributo", "Sintáctico");
+                                return verifyDeclaration(total_dec.size(), "Total", 1);
                             }
                         }
                     }
@@ -194,6 +185,34 @@ public class CreateGraphics implements Serializable {
             }
         }
         return error;
+    }
+
+    private Object attributesOptionalForPie() {
+        if (extra_dec.size() <= 1) {
+            if (join_dec.size() <= tags_dec.size() * 2) {
+                String t = type_dec.get(0);
+                Object tags = tags_dec.clone();
+                Object v = value_dec.clone();
+                Double to = 360.0;
+                if (total_dec.size() == 1) {
+                    to = total_dec.get(0);
+                }
+                String ex = extra_dec.get(0);
+                ex = ex.replace("\"", "");
+                String ti = title_dec.get(0);
+                Object j = join_dec.clone();
+                allGPie.add(new GPie(t, (ArrayList<String>) tags, (ArrayList<Double>) v,
+                        to, ex, ti, (ArrayList<Integer>) j));
+                emptyDeclaration();
+                return true;
+            } else {
+                emptyDeclaration();
+                return new ErrorDesc("Multiple Declaración de unir", 0, 0, "Sólo puede declararse una vez el atributo", "Sintáctico");
+            }
+        } else {
+            emptyDeclaration();
+            return new ErrorDesc("Multiple Declaración de extra", 0, 0, "Sólo puede declararse una vez el atributo", "Sintáctico");
+        }
     }
 
     private Object verifyMinimum(int size, String name, int minimum) {
@@ -232,7 +251,7 @@ public class CreateGraphics implements Serializable {
         return allGPie;
     }
 
-    public ArrayList<Operation> getOperations(){
+    public ArrayList<Operation> getOperations() {
         return operations;
     }
 

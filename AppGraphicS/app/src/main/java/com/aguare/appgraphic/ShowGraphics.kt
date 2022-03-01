@@ -1,14 +1,13 @@
 package com.aguare.appgraphic
 
-import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.LinearLayout
-import android.widget.Toast
-import com.aguare.appgraphic.Back.Control.CreateGraphics
 import com.aguare.appgraphic.Back.GenerateG.GenerateChart
 import com.aguare.appgraphic.Back.Graphics.GBars
 import com.aguare.appgraphic.Back.Graphics.GPie
+import com.github.mikephil.charting.charts.BarChart
+import com.github.mikephil.charting.charts.PieChart
 
 class ShowGraphics : AppCompatActivity() {
 
@@ -17,6 +16,10 @@ class ShowGraphics : AppCompatActivity() {
     private lateinit var pie: ArrayList<GPie>
     private lateinit var run: ArrayList<String>
     private lateinit var lay: LinearLayout
+    private lateinit var bars: ArrayList<BarChart>
+    private lateinit var pies: ArrayList<PieChart>
+    private lateinit var createdB: ArrayList<String>
+    private lateinit var createdP: ArrayList<String>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,36 +33,43 @@ class ShowGraphics : AppCompatActivity() {
             gBars = gB as ArrayList<GBars>
             pie = gPie as ArrayList<GPie>
             run = r as ArrayList<String>
+            createdB = ArrayList()
+            createdP = ArrayList()
+            pies = ArrayList()
+            bars = ArrayList()
             createGraphics()
         }
     }
 
     private fun createGraphics() {
-        for (e in run){
-            for(bar in gBars){
-                if (bar.title.equals(e)){
-                    createBarGraphic(bar)
+        for (e in run) {
+            for (bar in gBars) {
+                if (bar.title.equals(e)) {
+                    var barNew = bar.clone()
+                    createBarGraphic(barNew)
                 }
             }
-            for(p in pie){
-                if (p.title.equals(e)){
-                    createPieGraphic(p)
+            for (p in pie) {
+                if (p.title.equals(e)) {
+                    var piNew = p.clone();
+                    createPieGraphic(piNew)
                 }
             }
         }
     }
 
-    private fun createBarGraphic(gBar: GBars){
+    private fun createBarGraphic(gBar: GBars) {
         var context = lay.context
         var barChart = generate.createChartBar(context, gBar)
         barChart.minimumHeight = 500
-        lay.addView(barChart)
+        lay.addView(barChart);
     }
 
-    private fun createPieGraphic(pie: GPie){
+    private fun createPieGraphic(pie: GPie) {
         var context = lay.context
         var pieChart = generate.createChartPie(context, pie)
         pieChart.minimumHeight = 500
         lay.addView(pieChart)
     }
+
 }

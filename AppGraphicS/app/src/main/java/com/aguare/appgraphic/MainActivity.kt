@@ -50,19 +50,22 @@ class MainActivity : AppCompatActivity() {
                     "   tipo: Porcentaje;\n" +
                     "   etiquetas: [\"Compi1\", \"Compi2\"];\n" +
                     "   valores:[5+1, 10];\n" +
-                    "   total: 25;\n" +
                     "   unir:[{0,1}, {1,0}];\n" +
                     "   extra: \"Resto\";\n" +
                     "}\n" +
                     "Def Pie{\n" +
                     "   titulo: \"Grafica 3\";\n" +
-                    "   tipo: Porcentaje;\n" +
+                    "   tipo: Cantidad;\n" +
                     "   etiquetas: [\"Compi1\", \"Compi2\"];\n" +
                     "   valores:[70, 120];\n" +
+                    "   total: 250;\n" +
                     "   unir:[{0,1}, {1,0}];\n" +
                     "   extra: \"Resto\";\n" +
                     "}\n" +
                     "#Aqui ejecutar la gráfica 1 y puedo ejecutar más de una grafica\n" +
+                    "Ejecutar (\"Grafica 2\");\n" +
+                    "Ejecutar (\"Grafica 3\");\n" +
+                    "Ejecutar (\"Grafica 1\");\n" +
                     "Ejecutar (\"Grafica 2\");\n" +
                     "Ejecutar (\"Grafica 3\");\n" +
                     "Ejecutar (\"Grafica 1\");\n"
@@ -96,7 +99,6 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra("Run", create.runGraphics)
             startActivity(intent)
         } catch (ex: Exception) {
-            ex.printStackTrace()
             findViewById<Button>(R.id.btnShowGraphic).isEnabled = false
             findViewById<Button>(R.id.btnShowReports).isEnabled = false
         }
